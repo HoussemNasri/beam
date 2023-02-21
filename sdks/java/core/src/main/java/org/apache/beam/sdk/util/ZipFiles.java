@@ -38,13 +38,14 @@ import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Iterator
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.io.ByteSource;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.io.CharSource;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.io.Files;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Functions for zipping a directory (including a subdirectory) into a ZIP-file or unzipping it
  * again.
  */
 @Internal
-@SuppressWarnings({"nullness", "keyfor"}) // TODO(https://github.com/apache/beam/issues/20497)
+@SuppressWarnings({"keyfor"}) // TODO(https://github.com/apache/beam/issues/20497)
 public final class ZipFiles {
   private ZipFiles() {}
 
@@ -75,7 +76,8 @@ public final class ZipFiles {
     }
 
     @Override
-    public InputStream openStream() throws IOException {
+    @SuppressWarnings({"nullable"})
+    public @Nullable InputStream openStream() throws IOException {
       return file.getInputStream(entry);
     }
 
@@ -132,7 +134,7 @@ public final class ZipFiles {
           }
         } else {
           File parentFile = targetFile.getParentFile();
-          if (!parentFile.isDirectory() && !parentFile.mkdirs()) {
+          if (parentFile != null && !parentFile.isDirectory() && !parentFile.mkdirs()) {
             throw new IOException("Failed to create directory: " + parentFile.getAbsolutePath());
           }
           // Write the file to the destination.
@@ -234,8 +236,11 @@ public final class ZipFiles {
         sourceDirectory.getAbsolutePath());
 
     try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
-      for (File file : sourceDirectory.listFiles()) {
-        zipDirectoryInternal(file, "", zos);
+      File[] sourceDirectoryFiles = sourceDirectory.listFiles();
+      if (sourceDirectoryFiles != null) {
+        for (File file : sourceDirectoryFiles) {
+          zipDirectoryInternal(file, "", zos);
+        }
       }
       zos.finish();
     }
@@ -262,7 +267,7 @@ public final class ZipFiles {
       // We are hitting a sub-directory. Recursively add children to zip in deterministic,
       // sorted order.
       File[] childFiles = inputFile.listFiles();
-      if (childFiles.length > 0) {
+      if (childFiles != null && childFiles.length > 0) {
         Arrays.sort(childFiles);
         // loop through the directory content, and zip the files
         for (File file : childFiles) {

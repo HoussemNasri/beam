@@ -23,6 +23,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -52,7 +53,7 @@ import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Lists;
  * on the schema.
  */
 @Experimental(Kind.SCHEMAS)
-@SuppressWarnings({"nullness", "rawtypes"})
+@SuppressWarnings({"rawtypes"})
 public class JavaFieldSchema extends GetterBasedSchemaProvider {
   /** {@link FieldValueTypeSupplier} that's based on public fields. */
   @VisibleForTesting
@@ -69,8 +70,8 @@ public class JavaFieldSchema extends GetterBasedSchemaProvider {
       for (int i = 0; i < fields.size(); ++i) {
         types.add(FieldValueTypeInformation.forField(fields.get(i), i));
       }
-      types.sort(Comparator.comparing(FieldValueTypeInformation::getNumber));
       validateFieldNumbers(types);
+      types.sort(Comparator.comparing(FieldValueTypeInformation::getNumber));
 
       // If there are no creators registered, then make sure none of the schema fields are final,
       // as we (currently) have no way of creating classes in this case.
@@ -78,9 +79,10 @@ public class JavaFieldSchema extends GetterBasedSchemaProvider {
           && ReflectUtils.getAnnotatedConstructor(clazz) == null) {
         Optional<Field> finalField =
             types.stream()
-                .map(FieldValueTypeInformation::getField)
-                .filter(f -> Modifier.isFinal(f.getModifiers()))
-                .findAny();
+                 .map(FieldValueTypeInformation::getField)
+                 .filter(Objects::nonNull)
+                 .filter(f -> Modifier.isFinal(f.getModifiers()))
+                 .findAny();
         if (finalField.isPresent()) {
           throw new IllegalArgumentException(
               "Class "

@@ -37,6 +37,8 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Queue;
 import java.util.ServiceLoader;
+
+import com.ibm.icu.text.UTF16;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Function;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Joiner;
@@ -44,9 +46,10 @@ import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.FluentIt
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.ImmutableSet;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.ImmutableSortedSet;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.collect.Queues;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /** Utilities for working with with {@link Class Classes} and {@link Method Methods}. */
-@SuppressWarnings({"nullness", "keyfor"}) // TODO(https://github.com/apache/beam/issues/20497)
+@SuppressWarnings({"keyfor"}) // TODO(https://github.com/apache/beam/issues/20497)
 public class ReflectHelpers {
 
   private static final Joiner COMMA_SEPARATOR = Joiner.on(", ");
@@ -147,6 +150,11 @@ public class ReflectHelpers {
 
     @Override
     public int compare(Object o1, Object o2) {
+      if (o1 == null || o1.getClass() == null || o1.getClass().getCanonicalName() == null) {
+        return -1;
+      } else if (o2 == null || o2.getClass() == null || o2.getClass().getCanonicalName() == null) {
+        return 1;
+      }
       return o1.getClass().getCanonicalName().compareTo(o2.getClass().getCanonicalName());
     }
   }
@@ -216,7 +224,7 @@ public class ReflectHelpers {
    * which by default would use the proposed {@code ClassLoader}, which can be null. The fallback is
    * as follows: context ClassLoader, class ClassLoader and finaly the system ClassLoader.
    */
-  public static ClassLoader findClassLoader(final ClassLoader proposed) {
+  public static ClassLoader findClassLoader(@Nullable final ClassLoader proposed) {
     ClassLoader classLoader = proposed;
     if (classLoader == null) {
       classLoader = ReflectHelpers.class.getClassLoader();

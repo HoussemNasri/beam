@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.beam.sdk.annotations.Experimental;
 import org.apache.beam.sdk.annotations.Experimental.Kind;
@@ -64,7 +65,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * }</pre>
  */
 @Experimental(Kind.SCHEMAS)
-@SuppressWarnings({"nullness", "keyfor"}) // TODO(https://github.com/apache/beam/issues/20497)
+@SuppressWarnings({"keyfor"}) // TODO(https://github.com/apache/beam/issues/20497)
 public class AddFields {
   public static <T> Inner<T> create() {
     return new Inner<>();
@@ -189,6 +190,7 @@ public class AddFields {
      * Add a new field of the specified type. The new field will be nullable and will be filled in
      * with null values.
      */
+    @SuppressWarnings({"nullable"})
     public Inner<T> field(String fieldName, Schema.FieldType fieldType) {
       return field(fieldName, fieldType.withNullable(true), null);
     }
@@ -220,7 +222,7 @@ public class AddFields {
               .collect(Collectors.toList());
       List<NewField> newNestedFields =
           fieldsToAdd.stream()
-              .filter(n -> !n.getDescriptor().getNestedFieldsAccessed().isEmpty())
+              .filter(n -> n != null && !n.getDescriptor().getNestedFieldsAccessed().isEmpty())
               .collect(Collectors.toList());
       // Group all nested fields together by the field at the current level. For example, if adding
       // a.b, a.c, a.d
@@ -240,9 +242,10 @@ public class AddFields {
         if (!nestedFields.isEmpty()) {
           nestedFields = nestedFields.stream().map(NewField::descend).collect(Collectors.toList());
 
-          AddFieldsInformation nestedInformation =
-              getAddFieldsInformation(field.getType(), nestedFields);
-          field = field.withType(nestedInformation.getOutputFieldType());
+          AddFieldsInformation nestedInformation = getAddFieldsInformation(field.getType(), nestedFields);
+          @SuppressWarnings({"nullable"})
+          FieldType outputFileType = nestedInformation.getOutputFieldType();
+          field = field.withType(outputFileType);
           resolvedNestedNewValues.put(i, nestedInformation);
         }
         builder.addField(field);

@@ -33,7 +33,7 @@ public abstract class TaggedPValue {
     return new AutoValue_TaggedPValue(tag, value);
   }
 
-  @SuppressWarnings({"keyfor", "nullness"})
+  @SuppressWarnings({"keyfor"})
   public static TaggedPValue ofExpandedValue(PCollection<?> value) {
     return of(Iterables.getOnlyElement(value.expand().keySet()), value);
   }

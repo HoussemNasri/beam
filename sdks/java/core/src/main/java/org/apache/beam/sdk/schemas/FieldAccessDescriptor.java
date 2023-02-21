@@ -79,7 +79,6 @@ public abstract class FieldAccessDescriptor implements Serializable {
 
     /** OneOf union for a collection selector. */
     @AutoOneOf(Qualifier.Kind.class)
-    @SuppressWarnings("nullness")
     public abstract static class Qualifier implements Serializable {
       /** The kind of qualifier. */
       public enum Kind {
