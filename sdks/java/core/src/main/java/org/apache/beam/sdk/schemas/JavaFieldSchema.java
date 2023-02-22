@@ -60,6 +60,7 @@ public class JavaFieldSchema extends GetterBasedSchemaProvider {
   public static class JavaFieldTypeSupplier implements FieldValueTypeSupplier {
     public static final JavaFieldTypeSupplier INSTANCE = new JavaFieldTypeSupplier();
 
+    @SuppressWarnings("nullness")
     @Override
     public List<FieldValueTypeInformation> get(Class<?> clazz) {
       List<Field> fields =

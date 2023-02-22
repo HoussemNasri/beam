@@ -37,8 +37,6 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Queue;
 import java.util.ServiceLoader;
-
-import com.ibm.icu.text.UTF16;
 import org.apache.beam.sdk.values.TypeDescriptor;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Function;
 import org.apache.beam.vendor.guava.v26_0_jre.com.google.common.base.Joiner;
@@ -123,12 +121,15 @@ public class ReflectHelpers {
     }
   }
 
+  @SuppressWarnings({"nullness"})
   private static void formatParameterizedType(StringBuilder builder, ParameterizedType t) {
-    if (t.getOwnerType() != null) {
-      format(builder, t.getOwnerType());
+    Type ownerType = t.getOwnerType();
+    Type rawType = t.getRawType();
+    if (ownerType != null) {
+      format(builder, ownerType);
       builder.append('.');
     }
-    format(builder, t.getRawType());
+    format(builder, rawType);
     if (t.getActualTypeArguments().length > 0) {
       builder.append('<');
       COMMA_SEPARATOR.appendTo(
@@ -148,6 +149,7 @@ public class ReflectHelpers {
   public static class ObjectsClassComparator implements Comparator<Object> {
     public static final ObjectsClassComparator INSTANCE = new ObjectsClassComparator();
 
+    @SuppressWarnings("nullness") // false positive
     @Override
     public int compare(Object o1, Object o2) {
       if (o1 == null || o1.getClass() == null || o1.getClass().getCanonicalName() == null) {
@@ -200,6 +202,7 @@ public class ReflectHelpers {
    * @param <T> The type of {@code iface}
    * @return An iterable of instances of T, ordered by their class' canonical name
    */
+  @SuppressWarnings("nullness")
   public static <T> Iterable<T> loadServicesOrdered(Class<T> iface, ClassLoader classLoader) {
     ServiceLoader<T> loader = ServiceLoader.load(iface, classLoader);
     ImmutableSortedSet.Builder<T> builder =
@@ -224,7 +227,7 @@ public class ReflectHelpers {
    * which by default would use the proposed {@code ClassLoader}, which can be null. The fallback is
    * as follows: context ClassLoader, class ClassLoader and finaly the system ClassLoader.
    */
-  public static ClassLoader findClassLoader(@Nullable final ClassLoader proposed) {
+  public static ClassLoader findClassLoader(final @Nullable ClassLoader proposed) {
     ClassLoader classLoader = proposed;
     if (classLoader == null) {
       classLoader = ReflectHelpers.class.getClassLoader();

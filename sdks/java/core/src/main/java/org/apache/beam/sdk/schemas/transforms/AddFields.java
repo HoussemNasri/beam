@@ -65,7 +65,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * }</pre>
  */
 @Experimental(Kind.SCHEMAS)
-@SuppressWarnings({"keyfor"}) // TODO(https://github.com/apache/beam/issues/20497)
+@SuppressWarnings({"nullness", "keyfor"}) // TODO(https://github.com/apache/beam/issues/20497)
 public class AddFields {
   public static <T> Inner<T> create() {
     return new Inner<>();
@@ -190,7 +190,6 @@ public class AddFields {
      * Add a new field of the specified type. The new field will be nullable and will be filled in
      * with null values.
      */
-    @SuppressWarnings({"nullable"})
     public Inner<T> field(String fieldName, Schema.FieldType fieldType) {
       return field(fieldName, fieldType.withNullable(true), null);
     }
@@ -243,7 +242,6 @@ public class AddFields {
           nestedFields = nestedFields.stream().map(NewField::descend).collect(Collectors.toList());
 
           AddFieldsInformation nestedInformation = getAddFieldsInformation(field.getType(), nestedFields);
-          @SuppressWarnings({"nullable"})
           FieldType outputFileType = nestedInformation.getOutputFieldType();
           field = field.withType(outputFileType);
           resolvedNestedNewValues.put(i, nestedInformation);
@@ -428,6 +426,7 @@ public class AddFields {
     public PCollection<Row> expand(PCollection<T> input) {
       final AddFieldsInformation addFieldsInformation =
           getAddFieldsInformation(input.getSchema(), newFields);
+      Objects.requireNonNull(addFieldsInformation.getOutputFieldType());
       Schema outputSchema = checkNotNull(addFieldsInformation.getOutputFieldType().getRowSchema());
 
       return input

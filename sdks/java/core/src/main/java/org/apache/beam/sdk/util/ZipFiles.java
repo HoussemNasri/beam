@@ -76,7 +76,7 @@ public final class ZipFiles {
     }
 
     @Override
-    @SuppressWarnings({"nullable"})
+    @SuppressWarnings({"nullness"})
     public @Nullable InputStream openStream() throws IOException {
       return file.getInputStream(entry);
     }
